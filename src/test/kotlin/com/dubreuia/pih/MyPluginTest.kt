@@ -1,4 +1,4 @@
-package com.github.dubreuia.pythoninlayhintsplugin
+package com.dubreuia.pih
 
 import com.intellij.ide.highlighter.XmlFileType
 import com.intellij.psi.xml.XmlFile

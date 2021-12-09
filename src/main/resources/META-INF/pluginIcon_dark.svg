@@ -8,7 +8,7 @@
 	</defs>
 	<style>
 		tspan { white-space:pre }
-		.shp0 { fill: url(#grd1);stroke: #313131;stroke-linecap:round;stroke-linejoin:round;stroke-width: 2 } 
+		.shp0 { fill: url(#grd1);stroke: #dedede;stroke-linecap:round;stroke-linejoin:round;stroke-width: 2 } 
 		.shp1 { fill: #dedede;stroke: #313131 } 
 	</style>
 	<path class="shp0" d="M3 3L37 3L37 37L3 37L3 3Z" />
