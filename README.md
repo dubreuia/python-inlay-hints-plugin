@@ -1,8 +1,8 @@
 # Python Inlay Hints Plugin
 
 ![Build](https://github.com/dubreuia/python-inlay-hints-plugin/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/18174-python-inlay-hints.svg)](https://plugins.jetbrains.com/plugin/18174-python-inlay-hints)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/18174-python-inlay-hints.svg)](https://plugins.jetbrains.com/plugin/18174-python-inlay-hints)
 
 ## Description
 
