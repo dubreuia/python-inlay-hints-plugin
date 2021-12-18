@@ -10,6 +10,11 @@
 
 Show inferred Python types as Inlay Hints using folds (while we wait for [Displaying inlay hints for inferred types](https://youtrack.jetbrains.com/issue/PY-45743)).
 
+## Features
+
+- Shows inferred type for any variable
+- Works on non-recursive generic collection types
+
 ## Usage
 
 Showing and hiding types is done using the default folding commands:
@@ -27,7 +32,6 @@ Showing and hiding types is done using the default folding commands:
 | Python Inlay Hints in folds                                                            | Python Inlay Hints Demo                                                       | 
 |----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | <img src="./docs/screenshot-01.png" alt="python inlay hints screenshot" width="400px"> | <img src="./docs/video-01.gif" alt="python inlay hints video" width="400px"/> |
-
 
 ## TODO
 
