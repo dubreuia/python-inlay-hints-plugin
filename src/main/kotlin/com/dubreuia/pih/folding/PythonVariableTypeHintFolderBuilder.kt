@@ -9,6 +9,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.python.psi.PyTargetExpression
 import com.jetbrains.python.psi.PyTypedElement
 import com.jetbrains.python.psi.impl.stubs.PyAnnotationElementType
+import com.jetbrains.python.psi.types.PyCollectionType
+import com.jetbrains.python.psi.types.PyTupleType
 import com.jetbrains.python.psi.types.TypeEvalContext
 
 /**
@@ -30,20 +32,39 @@ class PythonVariableTypeHintFolderBuilder : FoldingBuilderEx() {
             ProjectManager.getInstance().openProjects.mapNotNull { project ->
                 val deepCodeInsight = TypeEvalContext.deepCodeInsight(project)
                 val expressionType = deepCodeInsight.getType(expression as PyTypedElement)
-                // TODO how to instanceOf in Kotlin?
-                val hasTypeAnnotation =
-                    expression.node?.treeNext?.elementType?.javaClass == PyAnnotationElementType::class.java
+                val hasTypeAnnotation = expression.node?.treeNext?.elementType is PyAnnotationElementType
+                // TODO this should be recursive
+                // Find generic types if the expression is a collection, but not a for tuple
+                // which already has generic types in its type declaration
+                val expressionTypeGenerics =
+                    if (expressionType is PyCollectionType
+                            && expressionType !is PyTupleType
+                            && expressionType.elementTypes.isNotEmpty())
+                        expressionType.elementTypes.mapNotNull { it }
+                    else
+                        emptyList()
                 // Do not show type information in fold if no analysed type or already has type annotation,
                 // or if the expression is qualified (e.g. `contract.name` won't show types)
                 if (expressionType == null || hasTypeAnnotation || expression.isQualified)
                     null
-                else
-                    FoldingDescriptor(
-                        expression.node,
-                        expression.textRange,
-                        null,
-                        expression.name + ": " + expressionType.name,
-                    )
+                else {
+                    val type =
+                        if (expressionTypeGenerics.isEmpty())
+                            expressionType.name
+                        else
+                            expressionType.name + expressionTypeGenerics
+                                .mapNotNull { it.name }
+                                .joinToString(separator = ",", prefix = "[", postfix = "]") { it }
+                    if (type == null)
+                        null
+                    else
+                        FoldingDescriptor(
+                            expression.node,
+                            expression.textRange,
+                            null,
+                            expression.name + ": " + type,
+                        )
+                }
             }
         }.toTypedArray()
     }
