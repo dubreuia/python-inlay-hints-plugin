@@ -7,10 +7,10 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.python.psi.PyTargetExpression
-import com.jetbrains.python.psi.PyTypedElement
 import com.jetbrains.python.psi.impl.stubs.PyAnnotationElementType
 import com.jetbrains.python.psi.types.PyCollectionType
 import com.jetbrains.python.psi.types.PyTupleType
+import com.jetbrains.python.psi.types.PyType
 import com.jetbrains.python.psi.types.TypeEvalContext
 
 /**
@@ -27,44 +27,64 @@ import com.jetbrains.python.psi.types.TypeEvalContext
  */
 class PythonVariableTypeHintFolderBuilder : FoldingBuilderEx() {
 
+    /**
+     * Returns the expression type with generic types if the expression is a collection
+     * or just the type otherwise
+     *
+     * e.g. "List[str, int]" or "int" or "(int, str)"
+     */
+    private fun getExpressionTypeWithGenerics(expressionType: PyType?): String? {
+        return if (
+            expressionType is PyCollectionType
+            && expressionType.name != null
+            // No generics for tuple since type already has them
+            && expressionType !is PyTupleType
+            && expressionType.elementTypes.isNotEmpty()
+        ) {
+            // Uppercase collection type names, e.g. converts list -> List
+            val collectionName = expressionType.name?.capitalize()
+            expressionType.elementTypes
+                .mapNotNull { getExpressionTypeWithGenerics(it) }
+                .joinToString(separator = ", ", prefix = "$collectionName[", postfix = "]") { it }
+        } else expressionType?.name
+    }
+
+    /**
+     * Returns variable with type information (including generic expression type if collection)
+     *
+     * Do not show type information in fold if no analysed type, already has type annotation,
+     * or if the expression is qualified (e.g. `contract.name` won't show types)
+     *
+     * e.g. "my_list: List[str, int]" or "my_int: int" or "contract.name"
+     */
+    private fun getVariableWithTypeInformation(
+        expression: PyTargetExpression,
+        typeEvalContext: TypeEvalContext
+    ): String? {
+        val expressionType = typeEvalContext.getType(expression)
+        val hasTypeAnnotation = expression.node?.treeNext?.elementType is PyAnnotationElementType
+        return if (expressionType == null || hasTypeAnnotation || expression.isQualified) {
+            null
+        } else {
+            val expressionTypeWithGenerics = getExpressionTypeWithGenerics(expressionType)
+            if (expressionTypeWithGenerics == null) expression.name
+            else "${expression.name}: $expressionTypeWithGenerics"
+        }
+    }
+
     override fun buildFoldRegions(root: PsiElement, document: Document, quick: Boolean): Array<FoldingDescriptor> {
         return PsiTreeUtil.findChildrenOfType(root, PyTargetExpression::class.java).flatMap { expression ->
+            // We only have target expressions, which corresponds to variable assignments
             ProjectManager.getInstance().openProjects.mapNotNull { project ->
                 val deepCodeInsight = TypeEvalContext.deepCodeInsight(project)
-                val expressionType = deepCodeInsight.getType(expression as PyTypedElement)
-                val hasTypeAnnotation = expression.node?.treeNext?.elementType is PyAnnotationElementType
-                // TODO this should be recursive
-                // Find generic types if the expression is a collection, but not a for tuple
-                // which already has generic types in its type declaration
-                val expressionTypeGenerics =
-                    if (expressionType is PyCollectionType
-                            && expressionType !is PyTupleType
-                            && expressionType.elementTypes.isNotEmpty())
-                        expressionType.elementTypes.mapNotNull { it }
-                    else
-                        emptyList()
-                // Do not show type information in fold if no analysed type or already has type annotation,
-                // or if the expression is qualified (e.g. `contract.name` won't show types)
-                if (expressionType == null || hasTypeAnnotation || expression.isQualified)
-                    null
-                else {
-                    val type =
-                        if (expressionTypeGenerics.isEmpty())
-                            expressionType.name
-                        else
-                            expressionType.name + expressionTypeGenerics
-                                .mapNotNull { it.name }
-                                .joinToString(separator = ",", prefix = "[", postfix = "]") { it }
-                    if (type == null)
-                        null
-                    else
-                        FoldingDescriptor(
-                            expression.node,
-                            expression.textRange,
-                            null,
-                            expression.name + ": " + type,
-                        )
-                }
+                val expressionType = getVariableWithTypeInformation(expression, deepCodeInsight)
+                if (expressionType == null) null
+                else FoldingDescriptor(
+                    expression.node,
+                    expression.textRange,
+                    null,
+                    expressionType,
+                )
             }
         }.toTypedArray()
     }
