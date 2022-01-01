@@ -12,6 +12,7 @@ import com.jetbrains.python.psi.types.PyCollectionType
 import com.jetbrains.python.psi.types.PyTupleType
 import com.jetbrains.python.psi.types.PyType
 import com.jetbrains.python.psi.types.TypeEvalContext
+import java.util.logging.Logger
 
 /**
  * Folder builder for python variable which folds the variable name and its
@@ -26,6 +27,8 @@ import com.jetbrains.python.psi.types.TypeEvalContext
  * For the whole syntax tree: `PsiTreeUtil.findChildrenOfType(root, PyExpression::class.java)`
  */
 class PythonVariableTypeHintFolderBuilder : FoldingBuilderEx() {
+
+    private var logger = Logger.getLogger("python-inlay-hints");
 
     /**
      * Returns the expression type with generic types if the expression is a collection
@@ -76,15 +79,20 @@ class PythonVariableTypeHintFolderBuilder : FoldingBuilderEx() {
         return PsiTreeUtil.findChildrenOfType(root, PyTargetExpression::class.java).flatMap { expression ->
             // We only have target expressions, which corresponds to variable assignments
             ProjectManager.getInstance().openProjects.mapNotNull { project ->
-                val deepCodeInsight = TypeEvalContext.deepCodeInsight(project)
-                val expressionType = getVariableWithTypeInformation(expression, deepCodeInsight)
-                if (expressionType == null) null
-                else FoldingDescriptor(
-                    expression.node,
-                    expression.textRange,
-                    null,
-                    expressionType,
-                )
+                try {
+                    val deepCodeInsight = TypeEvalContext.deepCodeInsight(project)
+                    val expressionType = getVariableWithTypeInformation(expression, deepCodeInsight)
+                    if (expressionType == null) null
+                    else FoldingDescriptor(
+                        expression.node,
+                        expression.textRange,
+                        null,
+                        expressionType,
+                    )
+                } catch (exception: Exception) {
+                    logger.info("Error during folding for ${expression}: $exception")
+                    null
+                }
             }
         }.toTypedArray()
     }
