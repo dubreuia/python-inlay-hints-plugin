@@ -13,7 +13,7 @@ Show inferred Python types as Inlay Hints using folds (while we wait for [Displa
 ## Features
 
 - Shows inferred type for any variable
-- Works on non-recursive generic collection types
+- Works on nested generic collection types
 
 ## Usage
 
@@ -32,8 +32,3 @@ Showing and hiding types is done using the default folding commands:
 | Python Inlay Hints in folds                                                            | Python Inlay Hints Demo                                                       | 
 |----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | <img src="./docs/screenshot-01.png" alt="python inlay hints screenshot" width="400px"> | <img src="./docs/video-01.gif" alt="python inlay hints video" width="400px"/> |
-
-## TODO
-
-- [ ] [Move to multi-module](https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html#modules-specific-to-functionality) (intellij has python plugin as well)
-- [ ] https://github.com/JetBrains/intellij-sdk-code-samples
