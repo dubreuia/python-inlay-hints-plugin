@@ -2,8 +2,6 @@
 
 # Python Inlay Hints Plugin Changelog
 
-## [Unreleased]
+## 1.2.0
 
-### Added
-
-- First version of plugin
+- Support for 2022.3
