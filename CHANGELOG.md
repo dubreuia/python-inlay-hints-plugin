@@ -2,6 +2,10 @@
 
 # Python Inlay Hints Plugin Changelog
 
+## 1.8.0
+
+- Support for 2024.2
+
 ## 1.7.0
 
 - Support for 2024.1 (again)
